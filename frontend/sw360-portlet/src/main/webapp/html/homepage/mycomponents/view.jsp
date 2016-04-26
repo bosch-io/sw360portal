@@ -1,8 +1,6 @@
-<%@ page import="com.siemens.sw360.portal.common.PortalConstants" %>
-<%@ page import="com.siemens.sw360.portal.portlets.Sw360Portlet" %>
-<%@ page import="com.siemens.sw360.portal.portlets.components.ComponentPortlet" %>
 <%--
   ~ Copyright Siemens AG, 2013-2015. Part of the SW360 Portal Project.
+  ~ With contributions by Bosch Software Innovations GmbH, 2016.
   ~
   ~ This program is free software; you can redistribute it and/or modify it under
   ~ the terms of the GNU General Public License Version 2.0 as published by the
@@ -26,6 +24,8 @@
 <%-- Note that the necessary includes are in life-ray-portlet.xml --%>
 
 <jsp:useBean id="components" type="java.util.List<com.siemens.sw360.datahandler.thrift.components.Component>"
+             class="java.util.ArrayList" scope="request"/>
+<jsp:useBean id="comreleases" type="java.util.List<java.util.List<com.siemens.sw360.datahandler.thrift.components.Release>>"
              class="java.util.ArrayList" scope="request"/>
 
 <div class="homepageheading">
