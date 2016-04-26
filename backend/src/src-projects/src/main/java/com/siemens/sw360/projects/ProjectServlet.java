@@ -18,11 +18,18 @@
 package com.siemens.sw360.projects;
 
 import com.siemens.sw360.datahandler.thrift.projects.ProjectService;
+import org.apache.log4j.Logger;
 import org.apache.thrift.protocol.TCompactProtocol;
 import com.siemens.sw360.projects.Sw360ThriftServlet;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.io.IOException;
+
+import static org.apache.log4j.Logger.getLogger;
 
 /**
  * Thrift Servlet instantiation

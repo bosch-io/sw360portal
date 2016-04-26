@@ -50,20 +50,14 @@ public class MyComponentsPortlet extends Sw360Portlet {
     @Override
     public void doView(RenderRequest request, RenderResponse response) throws IOException, PortletException {
         List<Component> components;
-        List<List<Release>> comreleases = new ArrayList<>();
         try {
             final User user = UserCacheHolder.getUserFromRequest(request);
             components = thriftClients.makeComponentClient().getMyComponents(user);
-
-            for (Component c: components) {
-                comreleases.add(c.releases);
-            }
         } catch (TException e) {
             log.error("Could not fetch your components from backend", e);
             components = new ArrayList<>();
         }
         request.setAttribute("components",  CommonUtils.nullToEmptyList(components));
-        request.setAttribute("comreleases", CommonUtils.nullToEmptyList(comreleases));
         super.doView(request, response);
     }
 }

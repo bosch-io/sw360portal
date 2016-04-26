@@ -25,8 +25,6 @@
 
 <jsp:useBean id="components" type="java.util.List<com.siemens.sw360.datahandler.thrift.components.Component>"
              class="java.util.ArrayList" scope="request"/>
-<jsp:useBean id="comreleases" type="java.util.List<java.util.List<com.siemens.sw360.datahandler.thrift.components.Release>>"
-             class="java.util.ArrayList" scope="request"/>
 
 <div class="homepageheading">
     My Components
@@ -42,6 +40,7 @@
     $(window).load(function () {
         var result = [];
         var releasesInfo = '';
+
         <core_rt:forEach items="${components}" var="component">
             <core_rt:choose>
                 <core_rt:when test="${component.releases.size() > 1}">
