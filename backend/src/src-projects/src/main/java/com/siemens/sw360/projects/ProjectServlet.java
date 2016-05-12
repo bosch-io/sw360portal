@@ -1,6 +1,5 @@
 /*
  * Copyright Siemens AG, 2013-2015. Part of the SW360 Portal Project.
- * With modifications by Bosch Software Innovations GmbH, 2016.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License Version 2.0 as published by the
@@ -19,25 +18,17 @@
 package com.siemens.sw360.projects;
 
 import com.siemens.sw360.datahandler.thrift.projects.ProjectService;
-import org.apache.log4j.Logger;
 import org.apache.thrift.protocol.TCompactProtocol;
-import com.siemens.sw360.projects.Sw360ThriftServlet;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.io.IOException;
 
-import static org.apache.log4j.Logger.getLogger;
 
 /**
  * Thrift Servlet instantiation
  *
  * @author cedric.bodet@tngtech.com
  * @author Johannes.Najjar@tngtech.com
- * @author Andreas.Reichel@tngtech.com
  */
 public class ProjectServlet extends Sw360ThriftServlet {
 
