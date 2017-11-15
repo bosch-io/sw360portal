@@ -320,48 +320,48 @@ public class PortalConstants {
     public static  final String UPDATE_VULNERABILITY_RATINGS = "updateVulnerabilityRatings";
     public static  final String UPDATE_VULNERABILITY_VERIFICATION = "updateVulnerabilityVerification";
 
+    public static final String UPDATE_VULNERABILITIES__FAILED_IDS = "updateVulnerabilities_failedIds";
+    public static final String UPDATE_VULNERABILITIES__NEW_IDS = "updateVulnerabilities_newIds";
+    public static final String UPDATE_VULNERABILITIES__UPDATED_IDS = "updateVulnerabilities_updatedIds";
+
     // Excel export
     public static final String EXPORT_TO_EXCEL = "export_to_excel";
     public static final String EXPORT_CLEARING_TO_EXCEL = "export_clearing_to_excel";
     public static final String EXPORT_ID = "export_id";
 
-    // Import Projects
-    public static final String CHECKED_PROJECT = "checked_project";
+    // Project Import:
+    public static final String PROJECT_IMPORT_CHECKED_PROJECT = "projectImport_checked_project";
 
-    // Import credentials
-    public static final String SESSION_IMPORT_USER = "importProject_import_user";
-    public static final String SESSION_IMPORT_DB = "importProject_import_db";
-    public static final String SESSION_IMPORT_PASS = "importProject_import_pass";
-    public static final String SESSION_IMPORT_URL = "importProject_import_url";
+    // Project Import: credentials/search string
+    public static final String PROJECT_IMPORT_USERNAME = "projectImport_import_user";
+    public static final String PROJECT_IMPORT_PASSWORD = "projectImport_import_pass";
+    public static final String PROJECT_IMPORT_SERVER_URL = "projectImport_import_url";
+    public static final String PROJECT_IMPORT_PROJECT_NAME = "projectImport_import_project_name";
 
-    // Import Actions
-    public static final String IMPORT_USER_ACTION__IMPORTBDP = "importProject_importBdpData";
+    // Project Import: user actions
+    public static final String PROJECT_IMPORT_USER_ACTION__IMPORT = "projectImport_import_action";
+    public static final String PROJECT_IMPORT_USER_ACTION__IMPORT_BDP = "projectImport_import_bdp_data";
+    public static final String PROJECT_IMPORT_USER_ACTION__DISCONNECT = "projectImport_disconnect";
+    public static final String PROJECT_IMPORT_USER_ACTION__NEWIMPORTSOURCE = "projectImport_select_new_import_source";
+    public static final String PROJECT_IMPORT_USER_ACTION__UPDATEIMPORTABLES = "projectImport_update_importables";
 
-    public static final String IMPORT_USER_ACTION = "importProject_import_action";
-    public static final String IMPORT_USER_ACTION__DISCONNECT = "importProject_disconnect";
-    public static final String IMPORT_USER_ACTION__NEWIMPORTSOURCE = "importProject_select_new_import_source";
-    public static final String IMPORT_USER_ACTION__UPDATEIMPORTABLES = "importProject_update_importables";
+    // Project Import: response fields
+    public static final String PROJECT_IMPORT_RESPONSE__SUCCESS = "projectImport_response_bdp_import_success";
+    public static final String PROJECT_IMPORT_RESPONSE__FAILURE = "projectImport_response_bdp_import_failure";
+    public static final String PROJECT_IMPORT_RESPONSE__GENERAL_FAILURE = "projectImport_response_bdp_import_general_failure";
 
-    // Import Status
-    public static final String IMPORT_RESPONSE__IMPORT_BDP_SUCCESS = "importProject_response_bdp_import_success";
-    public static final String IMPORT_RESPONSE__IMPORT_BDP_FAILURE = "importProject_response_bdp_import_failure";
-    public static final String IMPORT_RESPONSE__IMPORT_BDP_GENERAL_FAILURE = "importProject_response_bdp_import_general_failure";
+    public static final String PROJECT_IMPORT_RESPONSE__STATUS = "projectImport_response_status";
+    public static final String PROJECT_IMPORT_RESPONSE__DB_URL = "projectImport_response_db_url";
+    public static final String PROJECT_IMPORT_RESPONSE__DB_CHANGED = "projectImport_response_db_changed";
+    public static final String PROJECT_IMPORT_RESPONSE__DB_URL_NOT_SET = "projectImport_response_db_url_not_set";
+    public static final String PROJECT_IMPORT_RESPONSE__UNAUTHORIZED = "projectImport_response_unauthorized";
+    public static final String PROJECT_IMPORT_RESPONSE__DB_CONNECT_ERROR = "projectImport_response_db_connect_error";
+    public static final String PROJECT_IMPORT_RESPONSE__NEW_IMPORTABLES = "projectImport_response_new_importables";
+
+    public static final String PROJECT_IMPORT_RESPONSE__SUCCESSFUL_IDS = "projectImport_response_successful_ids";
+    public static final String PROJECT_IMPORT_RESPONSE__FAILED_IDS = "projectImport_response_failed_ids";
+
     public static final String RESPONSE__IMPORT_GENERAL_FAILURE = "response_import_general_failure";
-
-
-    public static final String IMPORT_RESPONSE__STATUS = "importProject_response_status";
-    public static final String IMPORT_RESPONSE__DBURL = "importProject_response_dburl";
-    public static final String IMPORT_RESPONSE__DB_CHANGED = "importProject_response_db_changed";
-    public static final String IMPORT_RESPONSE__DB_URL_NOTSET = "importProject_response_db_url_notset";
-    public static final String IMPORT_RESPONSE__UNAUTHORIZED = "importProject_response_unauthorized";
-    public static final String IMPORT_RESPONSE__DB_CONNECT_ERROR = "importProject_response_db_connect_error";
-    public static final String IMPORT_RESPONSE__NEW_IMPORTABLES = "importProject_response_new_importables";
-
-    public static final String IMPORT_RESPONSE__SUCCESSFUL_IDS = "importProject_response_successfulIds";
-    public static final String IMPORT_RESPONSE__FAILED_IDS = "importProject_response_failedIds";
-    public static final String UPDATE_VULNERABILITIES__FAILED_IDS = "updateVulnerabilities_failedIds";
-    public static final String UPDATE_VULNERABILITIES__NEW_IDS = "updateVulnerabilities_newIds";
-    public static final String UPDATE_VULNERABILITIES__UPDATED_IDS = "updateVulnerabilities_updatedIds";
 
     //custom map keywords
     public static final String CUSTOM_MAP_KEY = "customMapKey";

@@ -16,6 +16,8 @@ package org.eclipse.sw360.portal.portlets.projects;
  */
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -75,9 +77,9 @@ public class ProjectImportPortlet extends Sw360Portlet {
     }
 
     private RemoteCredentials getRemoteCredentialsFromSession(PortletSession session) {
-        String dbUserName = (String) session.getAttribute(PortalConstants.SESSION_IMPORT_USER);
-        String dbUserPass = (String) session.getAttribute(PortalConstants.SESSION_IMPORT_PASS);
-        String dbUrl = (String) session.getAttribute(PortalConstants.SESSION_IMPORT_URL);
+        String dbUserName = (String) session.getAttribute(PortalConstants.PROJECT_IMPORT_USERNAME);
+        String dbUserPass = (String) session.getAttribute(PortalConstants.PROJECT_IMPORT_PASSWORD);
+        String dbUrl = (String) session.getAttribute(PortalConstants.PROJECT_IMPORT_SERVER_URL);
 
         return new RemoteCredentials()
                 .setPassword(dbUserPass)
@@ -86,9 +88,9 @@ public class ProjectImportPortlet extends Sw360Portlet {
     }
 
     private void putRemoteCredentialsIntoSession(PortletSession session, RemoteCredentials remoteCredentials) {
-        session.setAttribute(PortalConstants.SESSION_IMPORT_USER, nullToEmpty(remoteCredentials.getUsername()));
-        session.setAttribute(PortalConstants.SESSION_IMPORT_PASS, nullToEmpty(remoteCredentials.getPassword()));
-        session.setAttribute(PortalConstants.SESSION_IMPORT_URL, nullToEmpty(remoteCredentials.getServerUrl()));
+        session.setAttribute(PortalConstants.PROJECT_IMPORT_USERNAME, nullToEmpty(remoteCredentials.getUsername()));
+        session.setAttribute(PortalConstants.PROJECT_IMPORT_PASSWORD, nullToEmpty(remoteCredentials.getPassword()));
+        session.setAttribute(PortalConstants.PROJECT_IMPORT_SERVER_URL, nullToEmpty(remoteCredentials.getServerUrl()));
     }
 
     @Override
@@ -98,8 +100,9 @@ public class ProjectImportPortlet extends Sw360Portlet {
         String loggedInServer = "";
 
         RemoteCredentials reCred = getRemoteCredentialsFromSession(request.getPortletSession());
+        String projectName = request.getParameter(PortalConstants.PROJECT_IMPORT_PROJECT_NAME);
         if (!nullToEmpty(reCred.getServerUrl()).isEmpty()) {
-            importables = loadImportables(reCred);
+            importables = loadImportables(reCred, projectName);
             loggedIn = true;
             loggedInServer = reCred.getServerUrl();
         }
@@ -118,7 +121,7 @@ public class ProjectImportPortlet extends Sw360Portlet {
         List<String> checkedIds = new ArrayList<>();
         if (checked != null) {
             for (String s : checked) {
-                checkedIds.add(s.substring(PortalConstants.CHECKED_PROJECT.length()));
+                checkedIds.add(s.substring(PortalConstants.PROJECT_IMPORT_CHECKED_PROJECT.length()));
             }
         }
         return checkedIds;
@@ -128,12 +131,12 @@ public class ProjectImportPortlet extends Sw360Portlet {
         return (importStatus.isSetRequestStatus() && importStatus.getRequestStatus().equals(RequestStatus.SUCCESS) && importStatus.getFailedIds().isEmpty());
     }
 
-    private ImportStatus importDatasources(List<String> toImport, User user, RemoteCredentials remoteCredentials)  {
+    private ImportStatus importDatasources(List<String> toImport, User user, RemoteCredentials remoteCredentials) {
         ImportStatus importStatus = new ImportStatus();
         try {
             importStatus = bdpImportClient.importDatasources(toImport, user, remoteCredentials);
             if (!isImportSuccessful(importStatus)) {
-                if(importStatus.getRequestStatus().equals(RequestStatus.FAILURE)){
+                if (importStatus.getRequestStatus().equals(RequestStatus.FAILURE)) {
                     log.error("Importing of data sources failed.");
                 } else {
                     log.error("Importing has not succeeded for the following IDs: " + importStatus.getFailedIds().toString());
@@ -145,21 +148,18 @@ public class ProjectImportPortlet extends Sw360Portlet {
         return importStatus;
     }
 
-    private List<Project> loadImportables(RemoteCredentials remoteCredentials) {
-        List<Project> importable;
-
+    private List<Project> loadImportables(RemoteCredentials remoteCredentials, String projectName) {
         try {
-            importable = bdpImportClient.loadImportables(remoteCredentials);
+            log.info("Looking for importables with prefix " + projectName);
+            return bdpImportClient.suggestImportables(remoteCredentials, Strings.nullToEmpty(projectName));
         } catch (TException e) {
             log.error("Thrift failed, (uncaught TException)", e);
-            importable = new ArrayList<>();
+            return ImmutableList.of();
         }
-
-        return importable;
     }
 
-    private String getIdName(){
-        try{
+    private String getIdName() {
+        try {
             return bdpImportClient.getIdName();
         } catch (TException e) {
             log.error("Thrift failed, (uncaught TException)", e);
@@ -170,40 +170,41 @@ public class ProjectImportPortlet extends Sw360Portlet {
     @Override
     public void serveResource(ResourceRequest request, ResourceResponse response) throws IOException, PortletException {
         LoginState loginState = new LoginState();
-        String requestedAction = request.getParameter(PortalConstants.IMPORT_USER_ACTION);
+        String requestedAction = request.getParameter(PortalConstants.PROJECT_IMPORT_USER_ACTION__IMPORT);
         JSONObject responseData = handleRequestedAjaxAction(requestedAction, request, response, loginState);
 
         PrintWriter writer = response.getWriter();
         writer.write(responseData.toString());
     }
 
-    public JSONObject handleRequestedAjaxAction(String requestedAction, ResourceRequest request,  ResourceResponse response, LoginState loginState) throws IOException, PortletException {
+    public JSONObject handleRequestedAjaxAction(String requestedAction, ResourceRequest request, ResourceResponse response, LoginState loginState) throws IOException, PortletException {
         PortletSession session = request.getPortletSession();
         RemoteCredentials remoteCredentials = getRemoteCredentialsFromSession(session);
         JSONObject responseData = JSONFactoryUtil.createJSONObject();
 
-        switch(requestedAction) {
-            case PortalConstants.IMPORT_USER_ACTION__IMPORTBDP:
+        switch (requestedAction) {
+            case PortalConstants.PROJECT_IMPORT_USER_ACTION__IMPORT_BDP:
                 User user = UserCacheHolder.getUserFromRequest(request);
                 List<String> selectedIds = getProjectIdsForImport(request);
                 importBdpProjects(user, selectedIds, responseData, remoteCredentials);
                 break;
-            case PortalConstants.IMPORT_USER_ACTION__NEWIMPORTSOURCE:
+            case PortalConstants.PROJECT_IMPORT_USER_ACTION__NEWIMPORTSOURCE:
                 RemoteCredentials newCredentials = new RemoteCredentials()
-                        .setUsername(request.getParameter(PortalConstants.SESSION_IMPORT_USER))
-                        .setPassword(request.getParameter(PortalConstants.SESSION_IMPORT_PASS))
-                        .setServerUrl(request.getParameter(PortalConstants.SESSION_IMPORT_URL));
-                if (!validateCredentials(newCredentials)){
-                    responseData.put(PortalConstants.IMPORT_RESPONSE__STATUS,
-                            PortalConstants.IMPORT_RESPONSE__UNAUTHORIZED);
+                        .setUsername(request.getParameter(PortalConstants.PROJECT_IMPORT_USERNAME))
+                        .setPassword(request.getParameter(PortalConstants.PROJECT_IMPORT_PASSWORD))
+                        .setServerUrl(request.getParameter(PortalConstants.PROJECT_IMPORT_SERVER_URL));
+                if (!validateCredentials(newCredentials)) {
+                    responseData.put(PortalConstants.PROJECT_IMPORT_RESPONSE__STATUS,
+                            PortalConstants.PROJECT_IMPORT_RESPONSE__UNAUTHORIZED);
                 } else {
                     setNewImportSource(newCredentials, session, responseData, loginState);
                 }
                 break;
-            case PortalConstants.IMPORT_USER_ACTION__UPDATEIMPORTABLES:
-                updateImportables(responseData, loginState, remoteCredentials);
+            case PortalConstants.PROJECT_IMPORT_USER_ACTION__UPDATEIMPORTABLES:
+                String projectName = request.getParameter(PortalConstants.PROJECT_IMPORT_PROJECT_NAME);
+                updateImportables(responseData, loginState, remoteCredentials, projectName);
                 break;
-            case PortalConstants.IMPORT_USER_ACTION__DISCONNECT:
+            case PortalConstants.PROJECT_IMPORT_USER_ACTION__DISCONNECT:
                 putRemoteCredentialsIntoSession(session, new RemoteCredentials());
                 loginState.logout();
                 break;
@@ -227,19 +228,19 @@ public class ProjectImportPortlet extends Sw360Portlet {
         ImportStatus importStatus = importDatasources(selectedIds, user, remoteCredentials);
         JSONArray jsonFailedIds = JSONFactoryUtil.createJSONArray();
         JSONArray jsonSuccessfulIds = JSONFactoryUtil.createJSONArray();
-        if(importStatus.isSetRequestStatus() && importStatus.getRequestStatus().equals(RequestStatus.SUCCESS)) {
-            importStatus.getFailedIds().forEach(id -> jsonFailedIds.put(id));
-            importStatus.getSuccessfulIds().forEach(id -> jsonSuccessfulIds.put(id));
+        if (importStatus.isSetRequestStatus() && importStatus.getRequestStatus().equals(RequestStatus.SUCCESS)) {
+            importStatus.getFailedIds().forEach(jsonFailedIds::put);
+            importStatus.getSuccessfulIds().forEach(jsonSuccessfulIds::put);
 
-            responseData.put(PortalConstants.IMPORT_RESPONSE__FAILED_IDS, jsonFailedIds);
-            responseData.put(PortalConstants.IMPORT_RESPONSE__SUCCESSFUL_IDS, jsonSuccessfulIds);
+            responseData.put(PortalConstants.PROJECT_IMPORT_RESPONSE__FAILED_IDS, jsonFailedIds);
+            responseData.put(PortalConstants.PROJECT_IMPORT_RESPONSE__SUCCESSFUL_IDS, jsonSuccessfulIds);
         }
         if (isImportSuccessful(importStatus)) {
-            responseData.put(PortalConstants.IMPORT_RESPONSE__STATUS, PortalConstants.IMPORT_RESPONSE__IMPORT_BDP_SUCCESS);
+            responseData.put(PortalConstants.PROJECT_IMPORT_RESPONSE__STATUS, PortalConstants.PROJECT_IMPORT_RESPONSE__SUCCESS);
         } else if (importStatus.isSetRequestStatus() && importStatus.getRequestStatus().equals(RequestStatus.SUCCESS)) {
-            responseData.put(PortalConstants.IMPORT_RESPONSE__STATUS, PortalConstants.IMPORT_RESPONSE__IMPORT_BDP_FAILURE);
+            responseData.put(PortalConstants.PROJECT_IMPORT_RESPONSE__STATUS, PortalConstants.PROJECT_IMPORT_RESPONSE__FAILURE);
         } else {
-            responseData.put(PortalConstants.IMPORT_RESPONSE__STATUS, PortalConstants.IMPORT_RESPONSE__IMPORT_BDP_GENERAL_FAILURE);
+            responseData.put(PortalConstants.PROJECT_IMPORT_RESPONSE__STATUS, PortalConstants.PROJECT_IMPORT_RESPONSE__GENERAL_FAILURE);
         }
     }
 
@@ -249,34 +250,32 @@ public class ProjectImportPortlet extends Sw360Portlet {
 
         if (serverUrl.isEmpty()) {
             loginState.logout();
-            responseData.put(PortalConstants.IMPORT_RESPONSE__STATUS,
-                    PortalConstants.IMPORT_RESPONSE__DB_URL_NOTSET);
+            responseData.put(PortalConstants.PROJECT_IMPORT_RESPONSE__STATUS,
+                    PortalConstants.PROJECT_IMPORT_RESPONSE__DB_URL_NOT_SET);
         } else {
             putRemoteCredentialsIntoSession(session, newCredentials);
-            responseData.put(PortalConstants.IMPORT_RESPONSE__STATUS,
-                    PortalConstants.IMPORT_RESPONSE__DB_CHANGED);
-            responseData.put(PortalConstants.IMPORT_RESPONSE__DBURL, serverUrl);
+            responseData.put(PortalConstants.PROJECT_IMPORT_RESPONSE__STATUS,
+                    PortalConstants.PROJECT_IMPORT_RESPONSE__DB_CHANGED);
+            responseData.put(PortalConstants.PROJECT_IMPORT_RESPONSE__DB_URL, serverUrl);
             loginState.login(serverUrl);
         }
     }
 
-    private void updateImportables(JSONObject responseData, LoginState loginState, RemoteCredentials remoteCredentials) throws JsonProcessingException {
+    private void updateImportables(JSONObject responseData, LoginState loginState, RemoteCredentials remoteCredentials, String projectName) throws JsonProcessingException {
         if (!nullToEmpty(remoteCredentials.getServerUrl()).isEmpty()) {
-            List<Project> importables = loadImportables(remoteCredentials);
+            List<Project> importables = loadImportables(remoteCredentials, projectName);
 
             JSONArray serializedProjects = JSONFactoryUtil.createJSONArray();
             for (Project p : importables) {
                 JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-                if (p.isSetExternalIds() && ! isNullOrEmpty(p.getExternalIds().get(getIdName())))
-                jsonObject.put("externalId", p.getExternalIds().get(getIdName()));
+                if (p.isSetExternalIds() && !isNullOrEmpty(p.getExternalIds().get(getIdName())))
+                    jsonObject.put("externalId", p.getExternalIds().get(getIdName()));
                 jsonObject.put("name", p.getName());
                 serializedProjects.put(jsonObject.toString());
             }
-            responseData.put(PortalConstants.IMPORT_RESPONSE__NEW_IMPORTABLES, serializedProjects);
+            responseData.put(PortalConstants.PROJECT_IMPORT_RESPONSE__NEW_IMPORTABLES, serializedProjects);
         }
-        responseData.put(PortalConstants.IMPORT_RESPONSE__DBURL, remoteCredentials.getServerUrl());
+        responseData.put(PortalConstants.PROJECT_IMPORT_RESPONSE__DB_URL, remoteCredentials.getServerUrl());
         loginState.login(remoteCredentials.getServerUrl());
     }
-
-
 }
