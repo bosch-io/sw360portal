@@ -220,8 +220,15 @@
                             self.setContent('Projects imported successfully.');
                             break;
                         case '<%=PortalConstants.PROJECT_IMPORT_RESPONSE__FAILURE%>':
-                            var failedIdsList = "<div>" + response.<%=PortalConstants.PROJECT_IMPORT_RESPONSE__FAILED_IDS%> + "</div>";
-                            self.setContent('Some projects failed to import:' + failedIdsList);
+                            var bodyContent = "<ol>";
+                            var failedIdsList = response.<%=PortalConstants.PROJECT_IMPORT_RESPONSE__FAILED_IDS%>;
+
+                            $.each(failedIdsList, function (key, value) {
+                                bodyContent += "<li><b>" + key + "</b>: " + value + "</li>";
+                            });
+                            bodyContent += "</ol>";
+
+                            self.setContent('Some projects failed to import:' + bodyContent);
                             break;
                         case '<%=PortalConstants.PROJECT_IMPORT_RESPONSE__GENERAL_FAILURE%>':
                             flashErrorMessage('Could not import the projects.');
