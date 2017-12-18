@@ -25,6 +25,7 @@ import org.spdx.rdfparser.model.SpdxItem;
 import org.spdx.rdfparser.model.SpdxPackage;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,8 +38,8 @@ public class SPDXParserTools {
 
     private static final String LICENSE_REF_PREFIX = "LicenseRef-";
 
-    private static String extractLicenseName(AnyLicenseInfo licenseConcluded) {
-        return licenseConcluded.getResource().getLocalName();
+    private static String extractLicenseName(License licenseConcluded) {
+        return licenseConcluded.getName();
     }
 
     private static String extractLicenseName(ExtractedLicenseInfo extractedLicenseInfo) {
@@ -127,7 +128,7 @@ public class SPDXParserTools {
             try {
                 copyrights = Stream.concat(copyrights,
                         Arrays.stream(spdxPackage.getFiles())
-                                .flatMap(spdxFile -> getAllCopyrights(spdxFile)));
+                                .flatMap(SPDXParserTools::getAllCopyrights));
             } catch (InvalidSPDXAnalysisException e) {
                 log.error("Failed to get files of package: " + spdxPackage.getName(), e);
                 throw new UncheckedInvalidSPDXAnalysisException(e);
@@ -138,7 +139,7 @@ public class SPDXParserTools {
 
 
     protected static LicenseInfoParsingResult getLicenseInfoFromSpdx(AttachmentContent attachmentContent, SpdxDocument doc) {
-        LicenseInfo licenseInfo = new LicenseInfo().setFilenames(Arrays.asList(attachmentContent.getFilename()));
+        LicenseInfo licenseInfo = new LicenseInfo().setFilenames(Collections.singletonList(attachmentContent.getFilename()));
         licenseInfo.setLicenseNamesWithTexts(new HashSet<>());
         licenseInfo.setCopyrights(new HashSet<>());
 

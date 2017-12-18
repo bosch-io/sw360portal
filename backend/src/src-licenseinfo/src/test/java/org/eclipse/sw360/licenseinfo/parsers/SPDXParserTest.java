@@ -11,6 +11,9 @@
  */
 package org.eclipse.sw360.licenseinfo.parsers;
 
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 import org.eclipse.sw360.datahandler.common.SW360Constants;
 import org.eclipse.sw360.datahandler.couchdb.AttachmentConnector;
 import org.eclipse.sw360.datahandler.thrift.Visibility;
@@ -27,26 +30,22 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.spdx.rdfparser.model.SpdxDocument;
 import org.spdx.rdfparser.SPDXDocumentFactory;
+import org.spdx.rdfparser.model.SpdxDocument;
 
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-
-import com.tngtech.java.junit.dataprovider.DataProvider;
-import com.tngtech.java.junit.dataprovider.DataProviderRunner;
-import com.tngtech.java.junit.dataprovider.UseDataProvider;
+import java.util.stream.Collectors;
 
 import static org.eclipse.sw360.licenseinfo.TestHelper.*;
 import static org.eclipse.sw360.licenseinfo.parsers.SPDXParser.FILETYPE_SPDX_INTERNAL;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 /**
- * @author: maximilian.huber@tngtech.com
+ * @author maximilian.huber@tngtech.com
  */
 @RunWith(DataProviderRunner.class)
 public class SPDXParserTest {
@@ -60,24 +59,24 @@ public class SPDXParserTest {
     @Mock
     private AttachmentConnector connector;
 
-    public static final String spdxExampleFile = "SPDXRdfExample-v2.0.rdf";
-    public static final String spdx11ExampleFile = "SPDXRdfExample-v1.1.rdf";
-    public static final String spdx12ExampleFile = "SPDXRdfExample-v1.2.rdf";
+    private static final String spdxExampleFile = "SPDXRdfExample-v2.0.rdf";
+    private static final String spdx11ExampleFile = "SPDXRdfExample-v1.1.rdf";
+    private static final String spdx12ExampleFile = "SPDXRdfExample-v1.2.rdf";
 
     @DataProvider
     public static Object[][] dataProviderAdd() {
         // @formatter:off
         return new Object[][] {
                 { spdxExampleFile,
-                        Arrays.asList("Apache-2.0", "LGPL-2.0", "1", "GPL-2.0", "CyberNeko License", "2"),
+                        Arrays.asList("Apache License 2.0", "GNU Library General Public License v2 only", "1", "GNU General Public License v2.0 only", "CyberNeko License", "2"),
                         4,
                         "Copyright 2008-2010 John Smith" },
                 { spdx11ExampleFile,
-                        Arrays.asList("4", "1", "Apache-2.0", "2", "Apache-1.0", "MPL-1.1", "CyberNeko License"),
+                        Arrays.asList("4", "1", "Apache License 2.0", "2", "Apache License 1.0", "Mozilla Public License 1.1", "CyberNeko License"),
                         2,
                         "Hewlett-Packard Development Company, LP" },
                 { spdx12ExampleFile,
-                        Arrays.asList("4", "1", "Apache-2.0", "2", "Apache-1.0", "MPL-1.1", "CyberNeko License"),
+                        Arrays.asList("4", "1", "Apache License 2.0", "2", "Apache License 1.0", "Mozilla Public License 1.1", "CyberNeko License"),
                         3,
                         "Hewlett-Packard Development Company, LP" },
         };
@@ -103,19 +102,21 @@ public class SPDXParserTest {
         assertThat(result.getFilenames().get(0), is(exampleFile));
 
         assertThat(result.getLicenseNamesWithTextsSize(), is(expectedLicenses.size()));
-        expectedLicenses.stream()
-                .forEach(licenseId -> assertThat(result.getLicenseNamesWithTexts().stream()
+
+        List<String> actualLicenses =
+                result.getLicenseNamesWithTexts().stream()
                         .map(LicenseNameWithText::getLicenseName)
-                        .anyMatch(licenseId::equals), is(true)));
-        assertThat(result.getLicenseNamesWithTexts().stream()
-                        .map(lt -> lt.getLicenseText())
-                        .anyMatch(t -> t.contains("The CyberNeko Software License, Version 1.0")),
-                is(true));
+                        .collect(Collectors.toList());
+
+        assertThat(actualLicenses, containsInAnyOrder(expectedLicenses.toArray()));
+
+        List<String> licenseTexts = result.getLicenseNamesWithTexts().stream()
+                .map(LicenseNameWithText::getLicenseText).collect(Collectors.toList());
+
+        assertThat(licenseTexts, hasItem(containsString("The CyberNeko Software License, Version 1.0")));
 
         assertThat(result.getCopyrightsSize(), is(numberOfCoyprights));
-        assertThat(result.getCopyrights().stream()
-                        .anyMatch(c -> c.contains(exampleCopyright)),
-                is(true));
+        assertThat(result.getCopyrights(), hasItem(containsString(exampleCopyright)));
     }
 
     @Test
@@ -150,7 +151,7 @@ public class SPDXParserTest {
                                                     .setAttachments(Collections.singleton(new Attachment().setAttachmentContentId(attachment.getAttachmentContentId()))))
                 .stream()
                 .findFirst()
-                .orElseThrow(()->new RuntimeException("Parser returned empty LisenceInfoParsingResult list"));
+                .orElseThrow(()->new RuntimeException("Parser returned empty LicenseInfoParsingResult list"));
 
         assertLicenseInfoParsingResult(result);
         assertIsResultOfExample(result.getLicenseInfo(), exampleFile, expectedLicenses, numberOfCoyprights, exampleCopyright);
